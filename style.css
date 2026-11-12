@@ -1,6 +1,81 @@
+/* ==========================================================================
+   Config Studio — Web DevKit Plugin Stylesheet
+   Adapted for Core Design System v2.0 (Full Light/Dark Theme Support & WCAG AAA)
+   ========================================================================== */
+
+:root {
+  --cs-wd-bg-base: var(--color-base, #161b22);
+  --cs-wd-bg-surface: var(--color-surface, #21262d);
+  --cs-wd-bg-surface-hover: var(--color-surface-hover, #30363d);
+  --cs-wd-bg-subtle: rgba(255, 255, 255, 0.04);
+  --cs-wd-border: var(--color-border, #30363d);
+  --cs-wd-text-primary: var(--text-primary, #f8fafc);
+  --cs-wd-text-secondary: var(--text-secondary, #cbd5e1);
+  --cs-wd-text-muted: var(--text-muted, #94a3b8);
+  --cs-wd-accent: var(--color-accent, #00d2b4);
+  --cs-wd-chrome-bar: #181b20;
+  --cs-wd-chrome-tab: #21262d;
+  --cs-wd-viewport-bg: #0f1218;
+}
+
+html:not(.dark),
+.theme-light,
+.theme-light-active {
+  --cs-wd-bg-base: var(--color-base, #f8fafc);
+  --cs-wd-bg-surface: var(--color-surface, #ffffff);
+  --cs-wd-bg-surface-hover: var(--color-surface-hover, #f1f5f9);
+  --cs-wd-bg-subtle: #f8fafc;
+  --cs-wd-border: var(--color-border, #e2e8f0);
+  --cs-wd-text-primary: var(--text-primary, #0f172a);
+  --cs-wd-text-secondary: var(--text-secondary, #334155);
+  --cs-wd-text-muted: var(--text-muted, #64748b);
+  --cs-wd-accent: var(--color-accent, #0284c7);
+  --cs-wd-chrome-bar: #e2e8f0;
+  --cs-wd-chrome-tab: #ffffff;
+  --cs-wd-viewport-bg: #f1f5f9;
+}
+
 .web-devkit-container {
   min-width: 320px;
+  background-color: var(--cs-wd-bg-surface);
+  color: var(--cs-wd-text-primary);
+  font-family: inherit;
 }
-.web-devkit-toolbar button {
-  outline: none;
+
+.web-devkit-chrome-bar {
+  background-color: var(--cs-wd-chrome-bar);
+  border-bottom: 1px solid var(--cs-wd-border);
+}
+
+.web-devkit-tab-strip {
+  background-color: var(--cs-wd-bg-base);
+  border-bottom: 1px solid var(--cs-wd-border);
+}
+
+.web-devkit-tab {
+  background-color: var(--cs-wd-chrome-tab);
+  border-top: 2px solid var(--cs-wd-accent);
+  color: var(--cs-wd-text-primary);
+  border-left: 1px solid var(--cs-wd-border);
+  border-right: 1px solid var(--cs-wd-border);
+}
+
+.web-devkit-nav-bar {
+  background-color: var(--cs-wd-chrome-bar);
+}
+
+.web-devkit-address-box {
+  background-color: var(--cs-wd-bg-base);
+  border: 1px solid var(--cs-wd-border);
+  color: var(--cs-wd-text-primary);
+}
+
+.web-devkit-viewport {
+  background-color: var(--cs-wd-viewport-bg);
+}
+
+.web-devkit-card {
+  background-color: var(--cs-wd-bg-surface);
+  border: 1px solid var(--cs-wd-border);
+  color: var(--cs-wd-text-primary);
 }

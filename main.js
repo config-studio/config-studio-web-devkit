@@ -387,19 +387,20 @@
     const meta = extractPageMeta(file ? file.content : '');
 
     // ========================================================================
+    // ========================================================================
     // Browser Chrome Window Bar (Edge/Chrome style tab + address bar)
     // ========================================================================
     const browserBar = document.createElement('div');
-    browserBar.className = 'bg-[#1e1e2e] border-b border-gray-700/80 flex flex-col';
+    browserBar.className = 'web-devkit-chrome-bar flex flex-col';
 
     // 1. Chrome Tab Strip
     const tabStrip = document.createElement('div');
-    tabStrip.className = 'flex items-center justify-between px-3 pt-2 bg-[#181825] border-b border-gray-800';
+    tabStrip.className = 'web-devkit-tab-strip flex items-center justify-between px-3 pt-2';
 
     const tab = document.createElement('div');
-    tab.className = 'flex items-center gap-2 px-3 py-1.5 bg-[#1e1e2e] border-t-2 border-accent text-gray-200 rounded-t-lg max-w-[240px] truncate text-xs shadow-sm font-medium';
+    tab.className = 'web-devkit-tab flex items-center gap-2 px-3 py-1.5 rounded-t-lg max-w-[240px] truncate text-xs shadow-sm font-medium';
     tab.innerHTML = `
-      <span class="text-sm shrink-0">${meta.favicon ? `<img src="${meta.favicon}" class="w-3.5 h-3.5 inline-block" onerror="this.outerHTML='🌐'" />` : '🌐'}</span>
+      <span class="text-sm shrink-0">${meta.favicon ? `<img src="${meta.favicon}" class="w-3.5 h-3.5 inline-block" onerror="this.outerHTML='<svg width=\\'12\\' height=\\'12\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'/><path d=\\'M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20\\'/></svg>'"/>` : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>'}</span>
       <span class="truncate">${meta.title}</span>
     `;
     tabStrip.appendChild(tab);
@@ -411,7 +412,7 @@
     const createDeviceBtn = (mode, label, title) => {
       const btn = document.createElement('button');
       btn.className = 'px-1.5 py-0.5 rounded text-[10px] transition font-medium ' + 
-        (deviceMode === mode ? 'bg-accent text-gray-900 font-bold' : 'hover:bg-gray-800 text-gray-400');
+        (deviceMode === mode ? 'bg-accent text-gray-900 font-bold' : 'hover:bg-base-surface text-base-muted');
       btn.textContent = label;
       btn.title = title;
       btn.onclick = () => {
@@ -431,34 +432,34 @@
 
     // 2. Navigation & Address Bar
     const navBar = document.createElement('div');
-    navBar.className = 'flex items-center gap-2 px-3 py-1.5 bg-[#1e1e2e]';
+    navBar.className = 'web-devkit-nav-bar flex items-center gap-2 px-3 py-1.5';
 
     const navBtns = document.createElement('div');
-    navBtns.className = 'flex items-center gap-1 text-gray-400';
+    navBtns.className = 'flex items-center gap-1 text-base-muted';
     navBtns.innerHTML = `
-      <button class="p-1 hover:text-white rounded hover:bg-gray-800" title="Назад">←</button>
-      <button class="p-1 hover:text-white rounded hover:bg-gray-800" title="Вперед">→</button>
+      <button class="p-1 hover:text-base-primary rounded hover:bg-base-surface" title="Назад">←</button>
+      <button class="p-1 hover:text-base-primary rounded hover:bg-base-surface" title="Вперед">→</button>
     `;
     const reloadBtn = document.createElement('button');
-    reloadBtn.className = 'p-1 hover:text-white rounded hover:bg-gray-800 text-accent transition';
+    reloadBtn.className = 'p-1 hover:text-base-primary rounded hover:bg-base-surface text-accent transition flex items-center justify-center';
     reloadBtn.title = 'Обновить страницу';
-    reloadBtn.textContent = '🔄';
+    reloadBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>';
     reloadBtn.onclick = () => refreshPreview();
     navBtns.appendChild(reloadBtn);
     navBar.appendChild(navBtns);
 
     // Address Bar Input Box
     const addressBox = document.createElement('div');
-    addressBox.className = 'flex-1 flex items-center gap-2 px-2.5 py-1 bg-black/40 border border-gray-700 rounded-lg text-gray-300 font-mono text-[11px] truncate shadow-inner';
+    addressBox.className = 'web-devkit-address-box flex-1 flex items-center gap-2 px-2.5 py-1 rounded-lg font-mono text-[11px] truncate shadow-inner';
     const serverActive = Boolean(serverProcess);
     const hostUrl = serverActive
       ? `http://${window.location.hostname || 'localhost'}:${serverPort}/${file ? file.name : ''}`
       : `preview://local/${file ? file.name : 'index.html'}`;
 
     addressBox.innerHTML = `
-      <span class="text-xs text-teal-400">${serverActive ? '🔒' : '📄'}</span>
+      <span class="text-xs text-accent flex items-center">${serverActive ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>'}</span>
       <span class="truncate">${hostUrl}</span>
-      <span class="ml-auto text-[10px] px-1 rounded ${serverActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'} font-sans">
+      <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded ${serverActive ? 'bg-emerald-500/20 text-emerald-400 font-semibold' : 'bg-base-surface text-base-muted'} font-sans">
         ${serverActive ? '200 OK (Live)' : 'Static'}
       </span>
     `;
@@ -466,9 +467,11 @@
 
     // Server controls
     const serverBtn = document.createElement('button');
-    serverBtn.className = 'px-2 py-1 rounded text-[11px] transition font-medium flex items-center gap-1 ' +
-      (serverActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-gray-800 hover:bg-gray-700 text-gray-300');
-    serverBtn.innerHTML = serverActive ? '🟢 :8085' : '▶ Сервер :8085';
+    serverBtn.className = 'px-2 py-1 rounded text-[11px] transition font-medium flex items-center gap-1.5 ' +
+      (serverActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-base-surface hover:bg-base-surface-hover text-base-primary border border-base-border');
+    serverBtn.innerHTML = serverActive 
+      ? '<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span> :8085' 
+      : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" class="inline"><polygon points="5 3 19 12 5 21 5 3"/></svg> Сервер :8085';
     serverBtn.onclick = async () => {
       if (serverActive) {
         await stopServer();
@@ -481,9 +484,9 @@
 
     if (serverActive) {
       const openExternalBtn = document.createElement('button');
-      openExternalBtn.className = 'p-1 hover:bg-gray-800 rounded text-gray-300 hover:text-white transition';
+      openExternalBtn.className = 'p-1 hover:bg-base-surface rounded text-base-muted hover:text-base-primary transition flex items-center justify-center';
       openExternalBtn.title = 'Открыть в отдельной вкладке браузера';
-      openExternalBtn.textContent = '🔗';
+      openExternalBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
       openExternalBtn.onclick = () => {
         window.open(hostUrl, '_blank');
       };
@@ -498,11 +501,11 @@
     // ========================================================================
     if (hasWebFile) {
       const frameContainer = document.createElement('div');
-      frameContainer.className = 'flex-1 overflow-auto flex items-center justify-center p-2 bg-[#12121a]';
+      frameContainer.className = 'web-devkit-viewport flex-1 overflow-auto flex items-center justify-center p-2';
 
       const iframe = document.createElement('iframe');
       iframe.id = 'web-devkit-frame';
-      iframe.className = 'h-full bg-white transition-all duration-200 rounded shadow-2xl border border-gray-700';
+      iframe.className = 'h-full bg-white transition-all duration-200 rounded shadow-2xl border border-base-border';
       iframe.sandbox = 'allow-scripts allow-forms allow-same-origin allow-modals';
 
       if (deviceMode === 'desktop') iframe.style.width = '1280px';
@@ -518,33 +521,35 @@
     } else {
       // Launchpad view
       const launchpad = document.createElement('div');
-      launchpad.className = 'flex-1 flex flex-col items-center justify-center p-6 text-center overflow-auto bg-[#12121a]';
+      launchpad.className = 'web-devkit-viewport flex-1 flex flex-col items-center justify-center p-6 text-center overflow-auto';
       launchpad.innerHTML = `
-        <div class="max-w-md p-6 rounded-2xl bg-[#1e1e2e] border border-gray-700 shadow-2xl text-left">
+        <div class="web-devkit-card max-w-md p-6 rounded-2xl shadow-2xl text-left">
           <div class="flex items-center space-x-3 mb-4">
-            <span class="text-3xl">🌐</span>
+            <span class="w-9 h-9 rounded-xl bg-accent/15 border border-accent/30 text-accent flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>
+            </span>
             <div>
-              <h3 class="text-base font-bold text-gray-100">Web DevKit v1.2</h3>
-              <p class="text-xs text-gray-400">Живой предпросмотр, имитация Chrome и веб-сервер</p>
+              <h3 class="text-base font-bold text-base-primary">Web DevKit</h3>
+              <p class="text-xs text-base-muted">Живой предпросмотр, имитация Chrome и веб-сервер</p>
             </div>
           </div>
-          <div class="p-3 mb-4 rounded-xl bg-black/30 border border-gray-700 text-xs text-gray-300">
-            <span class="text-gray-400">Активный файл:</span> 
+          <div class="p-3 mb-4 rounded-xl bg-base-default border border-base-border text-xs text-base-secondary">
+            <span class="text-base-muted">Активный файл:</span> 
             <span class="font-mono text-accent font-semibold">${file ? file.name : 'файл не открыт'}</span>
-            <div class="mt-1 text-[11px] text-gray-500">
+            <div class="mt-1 text-[11px] text-base-muted">
               ${file ? 'Файл не является веб-страницей. Вы можете быстро создать шаблон:' : 'Откройте или создайте HTML/PHP файл.'}
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2.5 mb-4">
             <button id="devkit-create-html" class="p-3 rounded-xl bg-accent/15 border border-accent/30 hover:bg-accent/25 text-accent font-semibold text-xs flex flex-col items-center text-center transition cursor-pointer">
-              <span class="text-lg mb-1">📄</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mb-1"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
               <span>Создать index.html</span>
-              <span class="text-[10px] text-gray-400 font-normal mt-0.5">HTML5 + Tailwind CDN</span>
+              <span class="text-[10px] text-base-muted font-normal mt-0.5">HTML5 + Tailwind CDN</span>
             </button>
             <button id="devkit-create-php" class="p-3 rounded-xl bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/25 text-purple-300 font-semibold text-xs flex flex-col items-center text-center transition cursor-pointer">
-              <span class="text-lg mb-1">🐘</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mb-1"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
               <span>Создать index.php</span>
-              <span class="text-[10px] text-gray-400 font-normal mt-0.5">PHP скрипт с сервером</span>
+              <span class="text-[10px] text-base-muted font-normal mt-0.5">PHP скрипт с сервером</span>
             </button>
           </div>
         </div>
