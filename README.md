@@ -1,6 +1,6 @@
 # Web DevKit Plugin for Config Studio 🌐
 
-[![Version](https://img.shields.io/badge/Version-v1.3.2-teal.svg)](https://github.com/config-studio/config-studio-web-devkit/releases)
+[![Version](https://img.shields.io/badge/Version-v1.3.3-teal.svg)](https://github.com/config-studio/config-studio-web-devkit/releases)
 [![Format](https://img.shields.io/badge/Format-.cspkg%20(MRS)-blue.svg)](https://github.com/config-studio/config-studio-plugins)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -41,7 +41,7 @@
 
 ### В 1 клик из приложения (рекомендуется)
 1. В Config Studio откройте **Настройки (⚙️) → Плагины → вкладка Каталог**.
-2. Найдите **Web DevKit v1.3.2** и нажмите **«Установить»**.
+2. Найдите **Web DevKit v1.3.3** и нажмите **«Установить»**.
 
 ### Установка пакета `.cspkg`
 1. Скачайте `web-devkit.cspkg` со страницы [Релизов](https://github.com/config-studio/config-studio-web-devkit/releases).
