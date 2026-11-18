@@ -18,7 +18,7 @@ jobs:
 
       - name: Install cspkg packager
         run: |
-          sudo curl -sSL -f https://github.com/EdvardBaldanov/config-studio-plugin-docs/releases/download/v1.0.0/cspkg-linux-amd64 -o /usr/local/bin/cspkg
+          sudo curl -sSL -f https://github.com/config-studio/config-studio-plugin-docs/releases/download/v1.0.0/cspkg-linux-amd64 -o /usr/local/bin/cspkg
           sudo chmod +x /usr/local/bin/cspkg
           cspkg version
 

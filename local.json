@@ -1,0 +1,10 @@
+{
+  "live_preview": "Живой предпросмотр",
+  "realtime_mode": "Реальное время",
+  "realtime_active": "Real-Time (Live)",
+  "server_8085": "Сервер :8085",
+  "reload": "Обновить страницу",
+  "open_external": "Открыть в отдельной вкладке браузера",
+  "create_html": "Создать index.html",
+  "create_php": "Создать index.php"
+}

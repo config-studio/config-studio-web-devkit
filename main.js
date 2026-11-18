@@ -14,6 +14,10 @@
   let serverProcess = null;
   let serverPort = 8085;
   let deviceMode = 'responsive'; // 'responsive', 'desktop', 'tablet', 'mobile'
+  let realtimeEnabled = true;
+  let realtimeDebounceTimer = null;
+  let activeModelListener = null;
+  let editorModelChangeBound = false;
 
   const WEB_EXTENSIONS = ['.html', '.htm', '.xhtml', '.php', '.phtml', '.svg', '.vue'];
 
@@ -356,6 +360,9 @@
 
   function togglePreview() {
     previewActive = !previewActive;
+    if (previewActive) {
+      bindEditorRealtimeListener();
+    }
     window.ConfigStudio.toggleSplitPanel({
       id: 'web-devkit-preview-panel',
       pluginId: pluginId,
@@ -363,6 +370,9 @@
       open: previewActive,
       render: (container) => renderPreviewUI(container)
     });
+    if (previewActive) {
+      scheduleRealtimeUpdate();
+    }
   }
 
   function escapeHtml(str) {
@@ -398,7 +408,6 @@
     const meta = extractPageMeta(file ? file.content : '');
 
     // ========================================================================
-    // ========================================================================
     // Browser Chrome Window Bar (Edge/Chrome style tab + address bar)
     // ========================================================================
     const browserBar = document.createElement('div');
@@ -411,14 +420,31 @@
     const tab = document.createElement('div');
     tab.className = 'web-devkit-tab flex items-center gap-2 px-3 py-1.5 rounded-t-lg max-w-[240px] truncate text-xs shadow-sm font-medium';
     tab.innerHTML = `
-      <span class="text-sm shrink-0">${meta.favicon ? `<img src="${meta.favicon}" class="w-3.5 h-3.5 inline-block" onerror="this.outerHTML='<svg width=\\'12\\' height=\\'12\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'/><path d=\\'M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20\\'/></svg>'"/>` : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>'}</span>
-      <span class="truncate">${meta.title}</span>
+      <span class="text-sm shrink-0" id="web-devkit-tab-icon">${meta.favicon ? `<img src="${meta.favicon}" class="w-3.5 h-3.5 inline-block" onerror="this.outerHTML='<svg width=\\'12\\' height=\\'12\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'/><path d=\\'M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20\\'/></svg>'"/>` : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>'}</span>
+      <span class="truncate" id="web-devkit-tab-title">${meta.title}</span>
     `;
     tabStrip.appendChild(tab);
 
     // Device size switcher buttons in tab strip
     const deviceControls = document.createElement('div');
     deviceControls.className = 'flex items-center gap-1 pb-1';
+
+    // Real-Time Keystroke Toggle Button
+    const realtimeToggleBtn = document.createElement('button');
+    realtimeToggleBtn.className = 'px-1.5 py-0.5 rounded text-[10px] transition font-medium flex items-center gap-1 ' + 
+      (realtimeEnabled ? 'bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30' : 'bg-base-surface text-base-muted hover:text-base-primary');
+    realtimeToggleBtn.innerHTML = realtimeEnabled
+      ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ⚡ Real-Time'
+      : '⚡ Real-Time: OFF';
+    realtimeToggleBtn.title = 'Рендеринг в реальном времени при вводе в Monaco Editor (Real-Time Keystroke Rendering)';
+    realtimeToggleBtn.onclick = () => {
+      realtimeEnabled = !realtimeEnabled;
+      if (realtimeEnabled) {
+        scheduleRealtimeUpdate();
+      }
+      renderPreviewUI(container);
+    };
+    deviceControls.appendChild(realtimeToggleBtn);
 
     const createDeviceBtn = (mode, label, title) => {
       const btn = document.createElement('button');
@@ -467,12 +493,16 @@
       ? `http://${window.location.hostname || 'localhost'}:${serverPort}/${file ? file.name : ''}`
       : `preview://local/${file ? file.name : 'index.html'}`;
 
+    const statusBadgeHtml = serverActive
+      ? '<span class="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold font-sans flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 200 OK (:8085)</span>'
+      : (realtimeEnabled 
+          ? '<span class="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold font-sans flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ⚡ Real-Time</span>'
+          : '<span class="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-base-surface text-base-muted font-sans">Static</span>');
+
     addressBox.innerHTML = `
       <span class="text-xs text-accent flex items-center">${serverActive ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>'}</span>
       <span class="truncate">${hostUrl}</span>
-      <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded ${serverActive ? 'bg-emerald-500/20 text-emerald-400 font-semibold' : 'bg-base-surface text-base-muted'} font-sans">
-        ${serverActive ? '200 OK (Live)' : 'Static'}
-      </span>
+      ${statusBadgeHtml}
     `;
     navBar.appendChild(addressBox);
 
@@ -597,11 +627,54 @@
     else iframe.style.width = '100%';
   }
 
-  function loadIframeContent(iframe) {
+  function getCurrentEditorContent() {
+    try {
+      const editor = window.ConfigStudio.getEditor ? window.ConfigStudio.getEditor() : null;
+      if (editor && typeof editor.getValue === 'function') {
+        const val = editor.getValue();
+        if (typeof val === 'string') return val;
+      }
+    } catch (_) {}
+    if (typeof window.ConfigStudio.getActiveContent === 'function') {
+      try {
+        const val = window.ConfigStudio.getActiveContent();
+        if (typeof val === 'string') return val;
+      } catch (_) {}
+    }
+    const file = window.ConfigStudio.getActiveFile ? window.ConfigStudio.getActiveFile() : null;
+    return file ? (file.content || '') : '';
+  }
+
+  function applyContentToIframe(iframe, htmlContent) {
+    if (!iframe) return;
+    let scrollX = 0;
+    let scrollY = 0;
+    try {
+      if (iframe.contentWindow) {
+        scrollX = iframe.contentWindow.scrollX || iframe.contentWindow.pageXOffset || 0;
+        scrollY = iframe.contentWindow.scrollY || iframe.contentWindow.pageYOffset || 0;
+      }
+    } catch (_) {}
+
+    iframe.srcdoc = htmlContent;
+
+    const restoreScroll = () => {
+      try {
+        if (iframe.contentWindow) {
+          iframe.contentWindow.scrollTo(scrollX, scrollY);
+        }
+      } catch (_) {}
+    };
+
+    iframe.onload = restoreScroll;
+    setTimeout(restoreScroll, 40);
+  }
+
+  function loadIframeContent(iframe, overrideContent) {
     const file = window.ConfigStudio.getActiveFile();
     if (!file) return;
 
-    const lower = file.path.toLowerCase();
+    const lower = (file.path || file.name || '').toLowerCase();
     const isPhp = lower.endsWith('.php') || lower.endsWith('.phtml');
 
     if (serverProcess) {
@@ -624,7 +697,10 @@
           </html>
         `;
       } else {
-        iframe.srcdoc = file.content;
+        const content = typeof overrideContent === 'string'
+          ? overrideContent
+          : (getCurrentEditorContent() || file.content || '');
+        applyContentToIframe(iframe, content);
       }
     }
   }
@@ -632,6 +708,92 @@
   function refreshPreview() {
     const iframe = document.getElementById('web-devkit-frame');
     if (iframe) loadIframeContent(iframe);
+  }
+
+  function scheduleRealtimeUpdate() {
+    if (!previewActive || !realtimeEnabled) return;
+    if (realtimeDebounceTimer) {
+      clearTimeout(realtimeDebounceTimer);
+    }
+    realtimeDebounceTimer = setTimeout(() => {
+      performRealtimeUpdate();
+    }, 75);
+  }
+
+  function performRealtimeUpdate() {
+    const iframe = document.getElementById('web-devkit-frame');
+    if (!iframe) return;
+
+    const file = window.ConfigStudio.getActiveFile();
+    if (!file || !isWebFile(file)) return;
+
+    const lower = (file.path || file.name || '').toLowerCase();
+    const isPhp = lower.endsWith('.php') || lower.endsWith('.phtml');
+
+    // PHP requires server execution; live keystroke injection is for HTML/SVG/CSS/JS
+    if (serverProcess && isPhp) return;
+
+    const content = getCurrentEditorContent();
+
+    // 1. Live update tab title in Chrome bar
+    const meta = extractPageMeta(content);
+    const tabTitleEl = document.getElementById('web-devkit-tab-title');
+    if (tabTitleEl && meta.title) {
+      tabTitleEl.textContent = meta.title;
+    }
+
+    // 2. Live update IFrame content with scroll preservation
+    if (!isPhp) {
+      applyContentToIframe(iframe, content);
+    }
+  }
+
+  function bindEditorRealtimeListener() {
+    const editor = window.ConfigStudio.getEditor ? window.ConfigStudio.getEditor() : null;
+    if (!editor) return false;
+
+    if (activeModelListener && typeof activeModelListener.dispose === 'function') {
+      try {
+        activeModelListener.dispose();
+      } catch (_) {}
+      activeModelListener = null;
+    }
+
+    const model = typeof editor.getModel === 'function' ? editor.getModel() : null;
+    if (model && typeof model.onDidChangeContent === 'function') {
+      activeModelListener = model.onDidChangeContent(() => {
+        scheduleRealtimeUpdate();
+      });
+    } else if (typeof editor.onDidChangeModelContent === 'function') {
+      activeModelListener = editor.onDidChangeModelContent(() => {
+        scheduleRealtimeUpdate();
+      });
+    }
+
+    if (typeof editor.onDidChangeModel === 'function' && !editorModelChangeBound) {
+      editorModelChangeBound = true;
+      editor.onDidChangeModel(() => {
+        bindEditorRealtimeListener();
+        if (previewActive) {
+          const container = document.getElementById('web-devkit-preview-panel');
+          if (container) renderPreviewUI(container);
+        }
+      });
+    }
+
+    return Boolean(activeModelListener);
+  }
+
+  function initEditorRealtime() {
+    if (!bindEditorRealtimeListener()) {
+      let attempts = 0;
+      const timer = setInterval(() => {
+        attempts++;
+        if (bindEditorRealtimeListener() || attempts >= 20) {
+          clearInterval(timer);
+        }
+      }, 350);
+    }
   }
 
   async function startServer() {
@@ -677,11 +839,15 @@
   });
 
   window.ConfigStudio.onFileOpen((file) => {
+    bindEditorRealtimeListener();
     if (previewActive) {
       const container = document.getElementById('web-devkit-preview-panel');
       if (container) renderPreviewUI(container);
     }
   });
 
-  console.log('[WebDevKit v1.3.3] Plugin loaded with Chrome Browser Preview and AST Parsers.');
+  // Initialize real-time listeners for Monaco Editor
+  initEditorRealtime();
+
+  console.log('[WebDevKit v1.4.0] Plugin loaded with Real-Time Keystroke Rendering, Chrome Browser Preview and AST Parsers.');
 })();
