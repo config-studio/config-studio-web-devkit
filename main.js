@@ -1,5 +1,5 @@
 /**
- * Web DevKit Plugin for Config Studio v1.3.2
+ * Web DevKit Plugin for Config Studio v1.3.3
  * Provides Live HTML/PHP Preview with Browser Chrome Simulation,
  * AST Outline parsers, Monaco autocompletions and host server integration.
  */
@@ -365,14 +365,25 @@
     });
   }
 
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   // Helper to extract <title> and favicon from content
   function extractPageMeta(content) {
     if (!content) return { title: 'Document', favicon: null };
     const titleMatch = content.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : 'Document';
+    const title = titleMatch ? escapeHtml(titleMatch[1].trim()) : 'Document';
 
     const favMatch = content.match(/<link[^>]+rel=["']?(?:shortcut )?icon["']?[^>]+href=["']?([^"'>\s]+)["']?/i);
-    const favicon = favMatch ? favMatch[1] : null;
+    const rawFav = favMatch ? favMatch[1].trim() : null;
+    const favicon = rawFav && /^https?:\/\//i.test(rawFav) ? encodeURI(rawFav) : null;
 
     return { title, favicon };
   }
@@ -506,7 +517,7 @@
       const iframe = document.createElement('iframe');
       iframe.id = 'web-devkit-frame';
       iframe.className = 'h-full bg-white transition-all duration-200 rounded shadow-2xl border border-base-border';
-      iframe.sandbox = 'allow-scripts allow-forms allow-same-origin allow-modals';
+      iframe.sandbox = 'allow-scripts allow-forms allow-modals';
 
       if (deviceMode === 'desktop') iframe.style.width = '1280px';
       else if (deviceMode === 'tablet') iframe.style.width = '768px';
@@ -607,7 +618,7 @@
               <div class="text-4xl mb-3">🐘</div>
               <h3 class="text-base font-bold mb-2">Требуется запуск сервера</h3>
               <p class="text-xs text-gray-400 mb-4">Для выполнения PHP скриптов запустите веб-сервер кнопкой в панели сверху.</p>
-              <div class="text-[11px] font-mono text-emerald-400 bg-gray-900 p-2 rounded">php -S 0.0.0.0:8085</div>
+              <div class="text-[11px] font-mono text-emerald-400 bg-gray-900 p-2 rounded">php -S 127.0.0.1:8085</div>
             </div>
           </body>
           </html>
@@ -629,7 +640,7 @@
       const proc = await window.ConfigStudio.startProcess({
         pluginId: pluginId,
         command: 'php',
-        args: ['-S', '0.0.0.0:' + serverPort],
+        args: ['-S', '127.0.0.1:' + serverPort],
         port: serverPort
       });
       serverProcess = proc;
@@ -640,7 +651,7 @@
         const proc = await window.ConfigStudio.startProcess({
           pluginId: pluginId,
           command: 'python',
-          args: ['-m', 'http.server', String(serverPort)],
+          args: ['-m', 'http.server', String(serverPort), '--bind', '127.0.0.1'],
           port: serverPort
         });
         serverProcess = proc;
@@ -672,5 +683,5 @@
     }
   });
 
-  console.log('[WebDevKit v1.3.2] Plugin loaded with Chrome Browser Preview and AST Parsers.');
+  console.log('[WebDevKit v1.3.3] Plugin loaded with Chrome Browser Preview and AST Parsers.');
 })();
